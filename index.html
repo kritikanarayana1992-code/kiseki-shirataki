@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Kiseki Shirataki — What is it?</title>
+<meta name="description" content="6 calories. For the whole bowl. Learn what shirataki noodles are and why they're different.">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body {
+    height: 100%;
+    background: #111;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    overflow: hidden;
+    touch-action: none;
+  }
+
+  .app {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    padding: 16px;
+  }
+
+  .stage {
+    position: relative;
+    width: 100%;
+    max-width: 380px;
+    aspect-ratio: 9/16;
+    max-height: calc(100vh - 80px);
+    border-radius: 20px;
+    overflow: hidden;
+    background: #0e0e0e;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .progress-bar {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 10;
+    display: flex;
+    gap: 4px;
+    padding: 14px 14px 0;
+  }
+  .seg {
+    flex: 1;
+    height: 2.5px;
+    border-radius: 2px;
+    background: rgba(255,255,255,0.18);
+    overflow: hidden;
+  }
+  .seg .fill {
+    height: 100%;
+    width: 0%;
+    background: #fff;
+    border-radius: 2px;
+  }
+  .seg.done .fill { width: 100%; }
+  .seg.active .fill {
+    width: 100%;
+    transition: width var(--dur, 7s) linear;
+  }
+
+  .slide {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 48px 24px 24px;
+    opacity: 0;
+    transition: opacity 0.28s ease;
+    pointer-events: none;
+  }
+  .slide.active {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .brand {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 2.5px;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.35);
+  }
+
+  .body {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 16px;
+  }
+
+  .label-tag {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.3);
+  }
+
+  .big {
+    font-size: clamp(28px, 8vw, 38px);
+    font-weight: 800;
+    color: #fff;
+    line-height: 1.08;
+    letter-spacing: -0.5px;
+  }
+  .big.lime { color: #b8ff6a; }
+  .big.xl {
+    font-size: clamp(64px, 18vw, 80px);
+    line-height: 1;
+  }
+
+  .sub {
+    font-size: clamp(14px, 4vw, 17px);
+    font-weight: 700;
+    color: #fff;
+    line-height: 1.3;
+  }
+
+  .small {
+    font-size: clamp(13px, 3.5vw, 15px);
+    color: rgba(255,255,255,0.65);
+    line-height: 1.6;
+  }
+  .small.lime { color: #b8ff6a; }
+
+  .tiny {
+    font-size: 12px;
+    color: rgba(255,255,255,0.3);
+    line-height: 1.5;
+  }
+
+  .footer {
+    font-size: 11px;
+    color: rgba(255,255,255,0.28);
+    letter-spacing: 0.4px;
+  }
+
+  /* Quiz */
+  .quiz-opts {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 8px;
+  }
+  .qbtn {
+    background: rgba(255,255,255,0.07);
+    border: 1px solid rgba(255,255,255,0.14);
+    border-radius: 12px;
+    padding: 14px 16px;
+    color: #fff;
+    font-size: 14px;
+    font-family: inherit;
+    text-align: left;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s, color 0.15s;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .qbtn:active { transform: scale(0.98); }
+  .qbtn.correct {
+    background: rgba(184,255,106,0.15);
+    border-color: #b8ff6a;
+    color: #b8ff6a;
+  }
+  .qbtn.wrong {
+    background: rgba(255,80,80,0.1);
+    border-color: rgba(255,80,80,0.4);
+    color: rgba(255,110,110,0.8);
+  }
+  .quiz-hint {
+    font-size: 12px;
+    color: rgba(255,255,255,0.4);
+    margin-top: 4px;
+    display: none;
+  }
+
+  /* Tap zones */
+  .taps {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    z-index: 5;
+  }
+  .tap-prev, .tap-next { flex: 1; }
+
+  /* Slide backgrounds */
+  .s0 { background: #0e0e0e; }
+  .s1 { background: #0d160d; }
+  .s2 { background: #0a0f1a; }
+  .s3 { background: #160a0a; }
+  .s4 { background: #111009; }
+  .s5 { background: #0e0e0e; }
+  .s6 { background: #091410; }
+  .s7 { background: #101009; }
+  .s8 { background: #090d14; }
+
+  /* Bottom hint */
+  .hint {
+    margin-top: 14px;
+    font-size: 10px;
+    color: rgba(255,255,255,0.2);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="stage" id="stage">
+    <div class="progress-bar" id="progBar"></div>
+
+    <!-- 0: Pattern interrupt -->
+    <div class="slide s0 active">
+      <div class="brand">Kiseki Shirataki</div>
+      <div class="body">
+        <div class="big">These look<br>like noodles…</div>
+        <div class="small">…but they're not what you think.</div>
+      </div>
+      <div class="footer">Tap to continue →</div>
+    </div>
+
+    <!-- 1: What is it -->
+    <div class="slide s1">
+      <div class="brand">Kiseki Shirataki</div>
+      <div class="body">
+        <div class="big">Made from<br>a plant root.</div>
+        <div class="small">Not wheat. Not rice. Just konjac — a root that's mostly fibre and water.</div>
+        <div class="tiny">Eaten in Japan for over a thousand years.</div>
+      </div>
+      <div class="footer">Simple. Different.</div>
+    </div>
+
+    <!-- 2: Quiz -->
+    <div class="slide s2">
+      <div class="brand">Kiseki Shirataki</div>
+      <div class="body">
+        <div class="big">Guess the calories in this bowl.</div>
+        <div class="quiz-opts" id="quizOpts">
+          <button class="qbtn" data-correct="false">A &nbsp;— &nbsp;250 kcal</button>
+          <button class="qbtn" data-correct="false">B &nbsp;— &nbsp;120 kcal</button>
+          <button class="qbtn" data-correct="true">C &nbsp;— &nbsp;About 6</button>
+        </div>
+        <div class="quiz-hint" id="quizHint">Next slide reveals the full picture →</div>
+      </div>
+      <div class="footer">Tap an answer</div>
+    </div>
+
+    <!-- 3: Core hook -->
+    <div class="slide s3">
+      <div class="brand">Kiseki Shirataki</div>
+      <div class="body">
+        <div class="big lime xl">~6</div>
+        <div class="sub">calories. For the whole bowl.</div>
+        <div class="small">That's ~270g of noodles. Regular pasta: 300+ for the same weight.</div>
+        <div class="tiny">Same bowl. Very different math.</div>
+      </div>
+      <div class="footer">Same bowl. Different math.</div>
+    </div>
+
+    <!-- 4: Myth break -->
+    <div class="slide s4">
+      <div class="brand">Kiseki Shirataki</div>
+      <div class="body">
+        <div class="label-tag">Myth</div>
+        <div class="big">Eating healthy means eating less.</div>
+        <div class="small lime">Fact: you can have a full bowl and stay completely on track.</div>
+        <div class="tiny">No starvation. No sad portions.</div>
+      </div>
+      <div class="footer">No starvation needed.</div>
+    </div>
+
+    <!-- 5: Honest objection -->
+    <div class="slide s5">
+      <div class="brand">Kiseki Shirataki</div>
+      <div class="body">
+        <div class="big">Let's be<br>honest.</div>
+        <div class="small">The texture is different from regular noodles. That's real — we're not going to pretend otherwise.</div>
+      </div>
+      <div class="footer">But wait →</div>
+    </div>
+
+    <!-- 6: Resolution -->
+    <div class="slide s6">
+      <div class="brand">Kiseki Shirataki</div>
+      <div class="body">
+        <div class="big lime">That's been<br>solved.</div>
+        <div class="small">The right prep, the right flavours, the right dish — and it's genuinely enjoyable. Not "fine for diet food." Actually good.</div>
+        <div class="tiny">Diet food ≠ boring.</div>
+      </div>
+      <div class="footer">Diet food ≠ boring.</div>
+    </div>
+
+    <!-- 7: Who is it for -->
+    <div class="slide s7">
+      <div class="brand">Kiseki Shirataki</div>
+      <div class="body">
+        <div class="big">Who is<br>this for?</div>
+        <div class="small">Late-night snackers &nbsp;·&nbsp; People cutting fat &nbsp;·&nbsp; Anyone who loves noodles but hates the guilt after.</div>
+        <div class="tiny">Basically… most of us.</div>
+      </div>
+      <div class="footer">Basically… most of us.</div>
+    </div>
+
+    <!-- 8: CTA -->
+    <div class="slide s8">
+      <div class="brand">Kiseki Shirataki</div>
+      <div class="body">
+        <div class="big lime">Curious?</div>
+        <div class="sub">Try it right here.</div>
+        <div class="small">Ask us for a sample. No pressure, no purchase needed — just taste it.</div>
+      </div>
+      <div class="footer">Ask for a sample ↓</div>
+    </div>
+
+    <div class="taps">
+      <div class="tap-prev" id="tapPrev"></div>
+      <div class="tap-next" id="tapNext"></div>
+    </div>
+  </div>
+
+  <div class="hint">Tap left · right to navigate</div>
+</div>
+
+<script>
+  const TOTAL = 9;
+  const DUR = 7000;
+  let cur = 0;
+  let timer = null;
+  let quizAnswered = false;
+
+  const slides = document.querySelectorAll('.slide');
+  const progBar = document.getElementById('progBar');
+
+  const segs = [];
+  for (let i = 0; i < TOTAL; i++) {
+    const s = document.createElement('div');
+    s.className = 'seg';
+    s.innerHTML = '<div class="fill"></div>';
+    progBar.appendChild(s);
+    segs.push(s);
+  }
+
+  function goTo(n, auto) {
+    if (n < 0) n = 0;
+    if (n >= TOTAL) n = TOTAL - 1;
+    if (n === cur && !auto) return;
+
+    slides[cur].classList.remove('active');
+    segs[cur].classList.remove('active');
+
+    if (n > cur) {
+      segs[cur].classList.add('done');
+    } else {
+      for (let i = n; i < TOTAL; i++) {
+        segs[i].classList.remove('done', 'active');
+        const f = segs[i].querySelector('.fill');
+        f.style.transition = 'none';
+        f.style.width = '0%';
+      }
+    }
+
+    cur = n;
+    slides[cur].classList.add('active');
+    clearTimeout(timer);
+
+    const seg = segs[cur];
+    seg.classList.remove('done', 'active');
+    const fill = seg.querySelector('.fill');
+    fill.style.transition = 'none';
+    fill.style.width = '0%';
+    seg.style.setProperty('--dur', DUR + 'ms');
+    void fill.offsetWidth;
+    seg.classList.add('active');
+
+    if (cur < TOTAL - 1) {
+      timer = setTimeout(() => goTo(cur + 1, true), DUR);
+    }
+  }
+
+  // Quiz
+  const quizBtns = document.querySelectorAll('.qbtn');
+  const quizHint = document.getElementById('quizHint');
+  quizBtns.forEach(btn => {
+    btn.addEventListener('click', e => {
+      e.stopPropagation();
+      if (quizAnswered) return;
+      quizAnswered = true;
+      quizBtns.forEach(b => {
+        b.classList.add(b.dataset.correct === 'true' ? 'correct' : 'wrong');
+      });
+      quizHint.style.display = 'block';
+      clearTimeout(timer);
+      timer = setTimeout(() => goTo(cur + 1, true), 2800);
+    });
+  });
+
+  document.getElementById('tapNext').addEventListener('click', () => goTo(cur + 1, false));
+  document.getElementById('tapPrev').addEventListener('click', () => goTo(cur - 1, false));
+
+  // Swipe support
+  let startX = 0;
+  const stage = document.getElementById('stage');
+  stage.addEventListener('touchstart', e => { startX = e.touches[0].clientX; }, { passive: true });
+  stage.addEventListener('touchend', e => {
+    const dx = e.changedTouches[0].clientX - startX;
+    if (Math.abs(dx) > 40) dx < 0 ? goTo(cur + 1, false) : goTo(cur - 1, false);
+  }, { passive: true });
+
+  goTo(0, true);
+</script>
+</body>
+</html>
